@@ -10,4 +10,4 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: hostpath
   hostPath:
-    path: /Users/tadanobu/Documents/Kubernetes/k8s-lapp-mac/2.src-deploy-disk/storage
+    path: /Users/tadanobu/Documents/Kubernetes/k8s-lampp-mac/2.src-deploy-disk/storage
