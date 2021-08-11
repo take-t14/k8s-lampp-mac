@@ -1,1 +1,0 @@
-/var/www/html/public/laravel-project/laravelapp/public/js/app.js
