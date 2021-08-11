@@ -1,0 +1,1 @@
+/mnt/src/laravel-project/laravelapp/public/js/vue/entry-client.js
