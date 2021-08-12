@@ -67,7 +67,7 @@ __******************************************************************************
 #### # ターミナルでskaffoldインストール
 ##### ＜参考＞
 ##### # https://qiita.com/yakisuzu/items/caf5557ba059bb88f0fe
-brew install skaffold  
+brew install skaffold@1.1.0  
 
 #### # kuberctlインストール
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -   
@@ -235,8 +235,8 @@ kubectl apply -f ./k8s-mailsv-sv.yaml
 #### ＜ingressを構築＞
 #### # Ingress Controllerの作成
 ##### # 参考サイト：https://kubernetes.github.io/ingress-nginx/deploy/
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml  
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud-generic.yaml  
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.25.0/deploy/static/mandatory.yaml  
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.25.0/deploy/static/provider/cloud-generic.yaml
 cd ~/Documents/Kubernetes/k8s-lampp-mac/11.ingress  
 
 #### sslの鍵登録 ※HTTPSを使用する際は実施
