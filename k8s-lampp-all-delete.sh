@@ -18,13 +18,17 @@ kubectl delete -f k8s-sv.yaml
 cd ~/Documents/Kubernetes/k8s-lampp-mac/5.dns
 kubectl delete -f k8s-sv.yaml
 
-#### ＜php7削除＞
-##### php7イメージ削除
-cd ~/Documents/Kubernetes/k8s-lampp-mac/6.php7-rebuild
+#### ＜php削除＞
+##### php5イメージ削除
+cd ~/Documents/Kubernetes/k8s-lampp-mac/9.php5-rebuild
 kubectl delete -f k8s-sv.yaml
 
-##### php5イメージ削除
-cd ~/Documents/Kubernetes/k8s-lampp-mac/7.php5-rebuild
+##### php7イメージ削除
+cd ~/Documents/Kubernetes/k8s-lampp-mac/10.php7-rebuild
+kubectl delete -f k8s-sv.yaml
+
+##### php8イメージ削除
+cd ~/Documents/Kubernetes/k8s-lampp-mac/11.php8-rebuild
 kubectl delete -f k8s-sv.yaml
 
 #### ＜apache削除＞
@@ -32,14 +36,9 @@ kubectl delete -f k8s-sv.yaml
 cd ~/Documents/Kubernetes/k8s-lampp-mac/8.apache-rebuild
 kubectl delete -f k8s-sv.yaml
 
-#### ＜nuxt削除＞
-##### nuxtイメージ削除
-cd ~/Documents/Kubernetes/k8s-lampp-mac/9.nuxt-rebuild
-kubectl delete -f k8s-sv.yaml
-
 #### ＜mailsv削除＞
 ##### mailsvイメージ削除
-cd ~/Documents/Kubernetes/k8s-lampp-mac/10.mailsv-rebuild
+cd ~/Documents/Kubernetes/k8s-lampp-mac/7.mailsv-rebuild
 kubectl delete -f ./k8s-sv.yaml
 
 #### ＜DBのpvc削除＞
@@ -63,10 +62,13 @@ kubectl delete -f 1.PersistentVolume.yaml
 #### PersistentVolumeClaimの削除
 kubectl delete -f 2.PersistentVolumeClaim.yaml
 
-#### sslの鍵削除 ※HTTPSを使用する際は実施
-##### kubectl create secret tls example1.co.jp
+#### sshの鍵削除
+kubectl delete secret ssh-keys  
 
-cd ~/Documents/Kubernetes/k8s-lampp-mac/11.ingress
+#### sslの鍵削除 ※HTTPSを使用する際は実施
+##### kubectl delete secret tls example1.co.jp
+
+cd ~/Documents/Kubernetes/k8s-lampp-mac/6.ingress
 #### Ingressの削除
 kubectl delete -f 80.ingress.yaml
 

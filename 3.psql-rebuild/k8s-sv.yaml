@@ -22,10 +22,10 @@ metadata:
     app: postgresql
 spec:
   serviceName: "postgresql"
+  replicas: 1
   selector:
     matchLabels:
       app: postgresql
-  replicas: 1
   template:
     metadata:
       labels:

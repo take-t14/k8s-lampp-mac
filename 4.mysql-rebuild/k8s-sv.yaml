@@ -22,10 +22,10 @@ metadata:
     app: mysql
 spec:
   serviceName: "mysql"
+  replicas: 1
   selector:
     matchLabels:
       app: mysql
-  replicas: 1
   template:
     metadata:
       labels:

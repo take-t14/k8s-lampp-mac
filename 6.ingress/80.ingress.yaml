@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress
@@ -14,10 +14,6 @@ metadata:
 spec:
 #  tls:
 #  - hosts:
-#    - laravel-project.hatake.test
-# HTTPSの場合はsecretNameを指定(k8sへ登録した証明書の名称を指定する)
-#    secretName: laravel-project.hatake.test
-#  - hosts:
 #    - k8s-example1.co.jp
 # HTTPSの場合はsecretNameを指定(k8sへ登録した証明書の名称を指定する)
 #    secretName: example1.co.jp
@@ -26,35 +22,27 @@ spec:
 # HTTPSの場合はsecretNameを指定(k8sへ登録した証明書の名称を指定する)
 #    secretName: example2.co.jp
   rules:
-  - host: nuxtapp
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: apache-sv
-          servicePort: 80
-  - host: laravel-project.hatake.test
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: apache-sv
-          servicePort: 80
   - host: k8s-example1.co.jp
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: apache-sv
-          servicePort: 80
+          service:
+            name: apache-sv
+            port:
+              number: 80
 # HTTPSの場合は443を指定する
 #          servicePort: 443
   - host: k8s-example2.co.jp
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: apache-sv
-          servicePort: 80
+          service:
+            name: apache-sv
+            port:
+              number: 80
 # HTTPSの場合は443を指定する
 #          servicePort: 443

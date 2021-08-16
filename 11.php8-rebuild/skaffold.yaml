@@ -2,7 +2,7 @@ apiVersion: skaffold/v1beta8
 kind: Config
 build:
   artifacts:
-  - image: php-gke-nuxt
+  - image: php-gke-php
 deploy:
   kubectl:
     manifests:

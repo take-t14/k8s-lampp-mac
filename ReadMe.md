@@ -37,8 +37,8 @@ __******************************************************************************
 ・Mac OS Big Sur 11.2.2  
   
 ◆ソフトウェア  
-・Docker for Desktop 2.2.0.3(42716)  
-・Kubernetes v1.15.5  
+・Docker for Desktop 3.6.0(67351)  
+・Kubernetes v1.21.3  
 ・Homebrew 3.0.2  
 ・skaffold 1.1.0  
 
@@ -72,13 +72,13 @@ echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/a
 sudo apt-get update && sudo apt-get install -y kubelet kubeadm kubectl kubernetes-cni  
 
 #### # ダッシュボードインストール（1回だけ実施すればよい）
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml  
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.2.0/aio/deploy/recommended.yaml  
 
 #### # kubectl proxyを実行（ダッシュボード閲覧に必要）
 kubectl proxy  
 
 #### # ダッシュボードへアクセス
-http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/  
+http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/  
 
 #### # 権限取得
 kubectl -n kube-system get secret  
@@ -185,6 +185,8 @@ kubectl -n k8s-lampp-mac get pvc
 #### # 全イメージを表示する．
 docker images  
 
+#### sshの鍵登録 ※要事前に2.src-deploy-disk\ssh-keysへSSHの鍵配備
+kubectl create secret generic ssh-keys --from-file=./ssh-keys/id_rsa --from-file=./ssh-keys/id_rsa.pub  
 
 #### ＜php-srcのボリュームへチェックアウト＞
 ##### # ~/Documents/Kubernetes/k8s-lampp-mac/2.src-deploy-disk\storage
@@ -205,45 +207,43 @@ cd ~/Documents/Kubernetes/k8s-lampp-mac/4.mysql-rebuild
 cd ~/Documents/Kubernetes/k8s-lampp-mac/5.dns  
 ./skaffold_run.sh  
 
-#### ＜php構築＞
-##### # php7イメージビルド
-cd ~/Documents/Kubernetes/k8s-lampp-mac/6.php7-rebuild  
-./skaffold_run.sh  
-
-##### # php5イメージビルド
-cd ~/Documents/Kubernetes/k8s-lampp-mac/7.php5-rebuild  
-./skaffold_run.sh  
-
-#### ＜apache構築＞
-##### # apacheイメージビルド
-cd ~/Documents/Kubernetes/k8s-lampp-mac/8.apache-rebuild  
-./skaffold_run.sh  
-
-#### ＜nuxt構築＞
-##### # nuxtイメージビルド
-cd ~/Documents/Kubernetes/k8s-lampp-mac/9.nuxt-rebuild  
-./skaffold_run.sh  
-
-#### ＜mailsv構築＞
-##### # mailsvイメージビルド
-cd ~/Documents/Kubernetes/k8s-lampp-mac/10.mailsv-rebuild  
-kubectl apply -f ./k8s-mailsv-sv.yaml  
-
 #### ＜ingressを構築＞
 #### # Ingress Controllerの作成
 ##### # 参考サイト：https://kubernetes.github.io/ingress-nginx/deploy/
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.25.0/deploy/static/mandatory.yaml  
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.25.0/deploy/static/provider/cloud-generic.yaml
-cd ~/Documents/Kubernetes/k8s-lampp-mac/11.ingress  
-
-#### sslの鍵登録 ※HTTPSを使用する際は実施
-##### # kubectl create secret tls example1.co.jp --key ../8.apache-rebuild/ssl/example1.co.jp/svrkey-sample-empty.key --cert ../8.apache-rebuild/ssl/example1.co.jp/svrkey-sample-empty.crt
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.48.1/deploy/static/provider/cloud/deploy.yaml
+cd ~/Documents/Kubernetes/k8s-lampp-mac/6.ingress  
 
 #### # Ingressの作成
 kubectl apply -f 80.ingress.yaml  
 
 #### # ingressに割り振られたグローバルアドレスの確認
 kubectl get ingress  
+
+#### ＜mailsv構築＞
+##### # mailsvイメージビルド
+cd ~/Documents/Kubernetes/k8s-lampp-mac/7.mailsv-rebuild  
+kubectl apply -f ./k8s-mailsv-sv.yaml  
+
+#### ＜apache構築＞
+##### # apacheイメージビルド
+cd ~/Documents/Kubernetes/k8s-lampp-mac/8.apache-rebuild  
+./skaffold_run.sh  
+
+#### ＜php構築＞
+##### # php5イメージビルド
+cd ~/Documents/Kubernetes/k8s-lampp-mac/9.php5-rebuild  
+./skaffold_run.sh  
+
+##### # php7イメージビルド
+cd ~/Documents/Kubernetes/k8s-lampp-mac/10.php7-rebuild  
+./skaffold_run.sh  
+
+##### # php8イメージビルド
+cd ~/Documents/Kubernetes/k8s-lampp-mac/11.php8-rebuild  
+./skaffold_run.sh  
+
+#### sslの鍵登録 ※HTTPSを使用する際は実施
+##### # kubectl create secret tls example1.co.jp --key ../8.apache-rebuild/ssl/example1.co.jp/svrkey-sample-empty.key --cert ../8.apache-rebuild/ssl/example1.co.jp/svrkey-sample-empty.crt
 
 __**************************************************************************************__  
 __*　以下はkubernetesを操作する際によく使うコマンド__  
@@ -255,21 +255,21 @@ __******************************************************************************
 #### # namespace切り替え
 kubectl config current-context  
 #### # 上記コマンドで表示されたコンテキスト名を、以下のコマンドに組み込む
-kubectl config set-context docker-desktop --namespace=k8s-lampp-mac  
+kubectl config set-context docker-desktop --namespace=k8s-lampp-mac   
 
 #### # コンテキストの向き先確認
 kubectl config get-contexts  
 
 #### # コンテキストの削除
-kubectl config delete-context docker-for-desktop  
+kubectl config delete-context k8s-lampp-mac  
 
 #### # pod一覧
-kubectl get pod  
+kubectl get pod -n k8s-lampp-mac  
 
 #### # init-data.shの実行
 ##### # init-data.shはpod起動時に自動で実行される。pod稼働中に必要になった場合に以下を実行する。
 kubectl exec -it [podの名称] /bin/bash  
-kubectl exec -it php-fpm-7777b55996-n8s88 /bin/bash  
+kubectl exec -it php8-fpm-7b7c69c8b4-jtg2c /bin/bash -n k8s-lampp-mac  
 kubectl exec -it apache-64999bb6b4-lt4j4 /bin/bash  
 kubectl exec -it nuxt-8699dfcfc4-6kmt9 /bin/bash  
 kubectl exec -it postgresql-0 /bin/bash  
@@ -289,9 +289,9 @@ __******************************************************************************
 
 #### # kubectl get podとして「The connection to the server localhost:6445 was refused - did you specify the right host or port?」と出た場合
 ##### # Docker for Macの設定画面を開き、左下がKubernetes is runningとなってから再度試す。それでもダメな場合は以下を試す。
-docker ps --no-trunc | grep 'advertise-address='  
+##### # docker ps --no-trunc | grep 'advertise-address='  
 ##### # 「--secure-port=」以降のポートを確認。以下コマンドの[PORT]へ組み込んで実行
-kubectl config set-cluster docker-desktop-cluster --server=https://localhost:[PORT]  
+##### # kubectl config set-cluster docker-desktop-cluster --server=https://localhost:[PORT]  
 
 #### # kubectl get podとして「Unable to connect to the server: x509: certificate signed by unknown authority」と出た場合
 mv ~/.kube/config ~/.kube/config_back  

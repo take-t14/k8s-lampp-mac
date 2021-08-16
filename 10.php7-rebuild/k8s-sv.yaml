@@ -1,29 +1,32 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: php-fpm-service
+  name: php7-fpm-service
   labels:
-    app: php-fpm
+    app: php7-fpm
 spec:
   selector:
-    app: php-fpm
+    app: php7-fpm
   ports:
     - protocol: TCP
       port: 9000
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: php-fpm
+  name: php7-fpm
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: php7-fpm
   template:
     metadata:
       labels:
-        app: php-fpm
+        app: php7-fpm
     spec:
       containers:
-      - name: php-fpm
+      - name: php7-fpm
         image: php-gke-php:latest
 #        env:
 #        - name: LC_CTYPE
@@ -34,11 +37,6 @@ spec:
           - |
             ln -s /mnt/src/example1.co.jp /home/example1.co.jp && \
             ln -s /mnt/src/example2.co.jp /home/example2.co.jp && \
-            ln -s /mnt/src/laravel-project /home/laravel-project && \
-            rm -rf /mnt/src/laravel-project/www/public/vue/js/entry-client.js && \
-            rm -rf /mnt/src/laravel-project/www/public/vue/css/app.css && \
-            ln -s /mnt/src/laravel-project/laravelapp/public/js/vue/entry-client.js /mnt/src/laravel-project/www/public/vue/js/entry-client.js && \
-            ln -s /mnt/src/laravel-project/laravelapp/public/css/app.css /mnt/src/laravel-project/www/public/vue/css/app.css && \
             /usr/local/bin/dns-regist.sh && \
             /etc/init.d/blackfire-agent restart && \
             php-fpm
@@ -47,9 +45,15 @@ spec:
         volumeMounts:
         - name: disk
           mountPath: "/mnt/src"
+        - name: ssh-dir
+          mountPath: "/root/.ssh/"
         securityContext:
           privileged: true
       volumes:
       - name: disk
         persistentVolumeClaim:
           claimName: php-src-sample-pvc
+      - name: ssh-dir
+        secret:
+          secretName: ssh-keys
+          defaultMode: 0600
