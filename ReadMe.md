@@ -38,10 +38,11 @@ __******************************************************************************
 
 【環境要件】  
 ◆OS  
-・macOS Catalina 10.15.1  
-
+・Mac OS Big Sur 11.2.2  
+  
 ◆ソフトウェア  
-・Docker for Mac 2.1.0.5  
+・Docker for Desktop 2.2.0.3(42716)  
+・Kubernetes　v1.15.5  
 ・Homebrew 2.2.2  
 ・skaffold 1.1.0  
 
