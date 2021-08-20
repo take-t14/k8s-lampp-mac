@@ -10,12 +10,9 @@ FLUSH PRIVILEGES;
 use `mysql_db`;
 
 DROP TABLE IF EXISTS `users`;
-
 CREATE TABLE `users` (
-  `user_id` int,
   `user_name` longtext,
-  `user_password` longtext,
-  PRIMARY KEY (`user_id`)
+  `user_password` longtext
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -28,6 +25,6 @@ LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
-INSERT INTO users VALUES (0, 'mysql_user1', 'mysql_user1pass');
-INSERT INTO users VALUES (1, 'mysql_user2', 'mysql_user2pass');
-INSERT INTO users VALUES (2, 'mysql_user3', 'mysql_user3pass');
+INSERT INTO users VALUES ('mysql_user1', 'mysql_user1pass');
+INSERT INTO users VALUES ('mysql_user2', 'mysql_user2pass');
+INSERT INTO users VALUES ('mysql_user3', 'mysql_user3pass');

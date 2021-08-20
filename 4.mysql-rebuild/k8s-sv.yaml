@@ -65,10 +65,11 @@ spec:
         - sh
         - "-c"
         - |
-          /usr/local/bin/creat-volume.sh
+          /usr/local/bin/create-volume.sh
         securityContext:
           privileged: true
       volumes:
       - name: php-apache-psql-data
         persistentVolumeClaim:
           claimName: php-apache-psql-sample-pvc
+
