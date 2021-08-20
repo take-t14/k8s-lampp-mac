@@ -37,8 +37,8 @@ __******************************************************************************
 ・Mac OS Big Sur 11.2.2  
   
 ◆ソフトウェア  
-・Docker for Desktop 3.6.0(67351)  
-・Kubernetes v1.21.3  
+・Docker for Windows 2.5.0.1(49550) ～ 3.6.0(67351)
+・Kubernetes v1.19.3 ～ 1.21.3
 ・Homebrew 3.0.2  
 ・skaffold 1.1.0  
 
