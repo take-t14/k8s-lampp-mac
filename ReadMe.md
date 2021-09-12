@@ -12,12 +12,12 @@ k8s-lampp-mac/
 　┣3.psql-rebuild/・・・postgreSQLのコンテナ、service、deployment等を作成するyaml等  
 　┣4.mysql-rebuild/・・・MySQLのコンテナ、service、deployment等を作成するyaml等  
 　┣5.dns/・・・DNS(bind)のコンテナ、service、deployment等を作成するyaml等  
-　┣6.php7-rebuild/・・・php-fpm(php7)のコンテナ、service、deployment等を作成するyaml等  
-　┣7.php5-rebuild/・・・php-fpm(php5)のコンテナ、service、deployment等を作成するyaml等  
+　┣6.ingress/・・・ingressのyaml等  
+　┣7.mailsv-rebuild/・・・postfixのコンテナ、service、deployment等を作成するyaml等  
 　┣8.apache-rebuild/・・・apacheのコンテナ、service、deployment等を作成するyaml等  
-　┣9.nuxt-rebuild/・・・nuxtのコンテナ、service、deployment等を作成するyaml等  
-　┣10.mailsv-rebuild/・・・postfixのコンテナ、service、deployment等を作成するyaml等  
-　┣11.ingress/・・・ingressのyaml等  
+　┣9.php5-rebuild/・・・php-fpm(php5)のコンテナ、service、deployment等を作成するyaml等  
+　┣10.php7-rebuild/・・・php-fpm(php7)のコンテナ、service、deployment等を作成するyaml等  
+　┣11.php8-rebuild/・・・php-fpm(php8)のコンテナ、service、deployment等を作成するyaml等  
 　┣k8s-lampp-all-build.sh・・・k8s-lampp-macのk8sコンテナを一斉に作成するシェル  
 　┣k8s-lampp-all-remove.sh・・・k8s-lampp-macのk8sコンテナを一斉に削除するシェル  
 　┣kube-mysql-proxy.sh・・・podのMySQLへDBクライアント（A5等）から接続する為のポートフォワード起動  
@@ -38,9 +38,12 @@ __******************************************************************************
   
 ◆ソフトウェア  
 ・Docker for Windows 2.5.0.1(49550) ～ 3.6.0(67351)  
-・Kubernetes v1.19.3 ～ 1.21.3  
+・Kubernetes v1.19.3 ～ 1.21.3（※１）  
 ・Homebrew 3.0.2  
-・skaffold 1.1.0  
+・skaffold 1.1.0（※２）  
+
+（※１）記載のバージョンでないと動作しない。インターネットで左記バージョンを入手するか、以下URLのものを使用する事。  
+（※２）こちらも記載のバージョンでないと動作しない。skaffoldは以下コマンドでバージョン固定しているので、意識しなくてもこのバージョンが入ります。  
 
 __**************************************************************************************__  
 __*　kubernetesを動かす基盤となるソフトウェアのインストール（全てUbuntu 18.04 LTSで実施）__  
@@ -268,8 +271,10 @@ kubectl get pod -n k8s-lampp-mac
 
 #### # init-data.shの実行
 ##### # init-data.shはpod起動時に自動で実行される。pod稼働中に必要になった場合に以下を実行する。
-kubectl exec -it [podの名称] /bin/bash  
-kubectl exec -it php8-fpm-7b7c69c8b4-jtg2c /bin/bash -n k8s-lampp-mac  
+kubectl exec -it [podの名称] /bin/bash    
+kubectl exec -it `kubectl get pod -n k8s-lampp-mac | grep php7-fpm | grep Running | awk -F " " '{print $1}'` /bin/bash -n k8s-lampp-mac  
+kubectl exec -it `kubectl get pod -n k8s-lampp-mac | grep php8-fpm | grep Running | awk -F " " '{print $1}'` /bin/bash -n k8s-lampp-mac  
+kubectl exec -it `kubectl get pod -n k8s-lampp-mac | grep apache | awk -F " " '{print $1}'` /bin/bash -n k8s-lampp-mac  
 kubectl exec -it apache-64999bb6b4-lt4j4 /bin/bash  
 kubectl exec -it nuxt-8699dfcfc4-6kmt9 /bin/bash  
 kubectl exec -it postgresql-0 /bin/bash  

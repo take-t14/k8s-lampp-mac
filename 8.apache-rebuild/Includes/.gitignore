@@ -1,0 +1,5 @@
+*
+/example1.co.jp.conf
+/example2.co.jp.conf
+/healthcheck.conf
+!.gitignore

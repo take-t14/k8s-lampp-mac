@@ -1,4 +1,4 @@
-FROM centos:centos7.2.1511
+FROM centos:centos7
 
 # normal updates
 RUN yum -y update
@@ -19,20 +19,22 @@ RUN cp /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf /opt/rh/httpd24/root/etc/h
 RUN mkdir -p /opt/rh/httpd24/root/etc/httpd/Includes
 COPY ./Includes /opt/rh/httpd24/root/etc/httpd/Includes
 
-# SSL�ʐM����ۂ͂�����L���ɂ���
+# SSL通信する際はここを有効にする
 # RUN mkdir -p /etc/httpd/ssl
 # COPY ./ssl /etc/httpd/ssl
-
+ADD ./entrypoint*.sh /usr/local/bin/
+RUN chmod 700 /usr/local/bin/entrypoint*.sh
+RUN chown root:root /usr/local/bin/entrypoint*.sh
 
 RUN sed -i "s/    DirectoryIndex index.html/    DirectoryIndex index.php/" /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf
 RUN sed -i "s/#ServerName www.example.com:80/ServerName localhost:80/" /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf
 RUN sed -i "s/Listen 80/Listen 80\nListen 10080/" /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf
 
-RUN echo "# �N���b�N�W���b�L���O�΍�" >> /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf
+RUN echo "# クリックジャッキング対策" >> /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf
 RUN echo "Header always append X-Frame-Options SAMEORIGIN" \
     >> /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf
 
-RUN echo "# XSS�΍�" >> /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf
+RUN echo "# XSS対策" >> /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf
 RUN echo "Header set X-XSS-Protection '1; mode=block'" \
     >> /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf
 RUN echo "Header set X-Content-Type-Options nosniff" \
@@ -46,12 +48,12 @@ ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/opt/rh/httpd24/root/usr/lib64
 ENV PATH $PATH:/opt/rh/httpd24/root/usr/sbin
 
 
-# �������{��ɐݒ�
+# 言語を日本語に設定
 RUN localedef -i ja_JP -f UTF-8 ja_JP.UTF-8
 RUN echo 'LANG="ja_JP.UTF-8"' >  /etc/locale.conf
 ENV LANG ja_JP.UTF-8
 
-# ���t����{��ɐݒ�
+# 日付を日本語に設定
 RUN echo 'ZONE="Asia/Tokyo"' > /etc/sysconfig/clock
 RUN rm -f /etc/localtime
 RUN ln -fs /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
