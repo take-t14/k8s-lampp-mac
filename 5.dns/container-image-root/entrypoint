@@ -33,6 +33,10 @@ create_named_data_dir() {
 
   mv /named.*.zone /named/var/
 
+  # macホストのIP登録
+  MAC_HOST_IP=`cat /mnt/hosts | grep 'host.docker.internal' | awk '{ print $1 }'`
+  echo " 86400 IN  A $MAC_HOST_IP" >> /named/var/named.host.docker.internal.zone
+  
   rm -rf /var/named
   ln -sf /named/var /var/named
 

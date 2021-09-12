@@ -1,4 +1,4 @@
-FROM centos:centos7.2.1511
+FROM centos:centos7
 
 # remi
 RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \
@@ -18,7 +18,7 @@ RUN yum -y install \
   php80-php-pecl-mongodb php80-php-pecl-xdebug3 php80-php-pecl-yaml subversion git \
   ssmtp mailutils gcc-c++ make \
   yum clean all
-RUN curl -sL https://rpm.nodesource.com/setup_12.x | bash -
+RUN curl -sL https://rpm.nodesource.com/setup_14.x | bash -
 RUN yum install -y nodejs \
   yum clean all
 RUN rm -rf /var/lib/apt/lists/*
@@ -37,6 +37,9 @@ ADD ./php-fpm.d/ /etc/opt/remi/php80/php-fpm.d
 ADD ./dns-regist.sh /usr/local/bin/
 RUN chmod 700 /usr/local/bin/dns-regist.sh
 RUN chown root:root /usr/local/bin/dns-regist.sh
+ADD ./entrypoint*.sh /usr/local/bin/
+RUN chmod 700 /usr/local/bin/entrypoint*.sh
+RUN chown root:root /usr/local/bin/entrypoint*.sh
 
 RUN sed -i "s/;date.timezone =/date.timezone = Asia\/Tokyo/" /etc/opt/remi/php80/php.ini
 
@@ -45,23 +48,25 @@ RUN useradd www-data
 RUN echo 'www-data:www-data' |chpasswd
 ENV PATH $PATH:/opt/remi/php80/root/usr/sbin:/opt/remi/php80/root/usr/bin:/usr/local/bin
 
-# �������{��ɐݒ�
+# 言語を日本語に設定
 RUN localedef -i ja_JP -f UTF-8 ja_JP.UTF-8
 RUN echo 'LANG="ja_JP.UTF-8"' >  /etc/locale.conf
 ENV LANG ja_JP.UTF-8
 
-# ���t����{��ɐݒ�
+# 日付を日本語に設定
 RUN echo 'ZONE="Asia/Tokyo"' > /etc/sysconfig/clock
 RUN rm -f /etc/localtime
 RUN ln -fs /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 
-# svn��F�؋L������悤�ݒ�
+# svnを認証記憶するよう設定
 RUN mkdir ~/.subversion
 RUN echo -e "[global]\nstore-passwords = yes\nstore-auth-creds = yes" > ~/.subversion/config
 
-
 RUN mv /etc/opt/remi/php80/php.d /etc/opt/remi/php80/php.d_back
 RUN mkdir /etc/opt/remi/php80/php.d
+RUN cp -a /etc/opt/remi/php80/php.d_back/*opcache*.ini /etc/opt/remi/php80/php.d/
+RUN cp -a /etc/opt/remi/php80/php.d_back/*xdebug*.ini /etc/opt/remi/php80/php.d/
+RUN cp -a /etc/opt/remi/php80/php.d_back/opcache-default.blacklist /etc/opt/remi/php80/php.d/
 
 RUN cd /tmp/
 RUN curl -s https://getcomposer.org/installer | php

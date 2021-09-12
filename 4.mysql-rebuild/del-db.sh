@@ -1,6 +1,6 @@
 #!/bin/bash
 
-kubectl config set-context docker-desktop --namespace=k8s-lampp-mac  
+kubectl config set-context minikube --namespace=k8s-lampp-mac  
 
 kubectl delete -f k8s-sv.yaml
 

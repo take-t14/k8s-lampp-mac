@@ -4,7 +4,7 @@
 kubectl create namespace k8s-lampp-mac
 
 #### namespace切り替え
-kubectl config set-context docker-desktop --namespace=k8s-lampp-mac  
+kubectl config set-context minikube --namespace=k8s-lampp-mac  
 
 #### ＜DBのpvc構築＞
 cd ~/Documents/Kubernetes/k8s-lampp-mac/1.db-disk
@@ -46,9 +46,6 @@ cd ~/Documents/Kubernetes/k8s-lampp-mac/5.dns
 ./skaffold_run.sh
 
 #### ＜ingressを構築＞
-##### Ingress Controllerの作成
-##### 参考サイト：https://kubernetes.github.io/ingress-nginx/deploy/
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.48.1/deploy/static/provider/cloud/deploy.yaml
 cd ~/Documents/Kubernetes/k8s-lampp-mac/6.ingress  
 
 #### sslの鍵登録 ※HTTPSを使用する際は実施

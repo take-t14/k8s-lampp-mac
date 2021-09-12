@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #### namespace切り替え
-kubectl config set-context docker-desktop --namespace=k8s-lampp-mac  
+kubectl config set-context minikube --namespace=k8s-lampp-mac  
 
 #### ＜postgreSQL削除＞
 ##### postgreSQLイメージ削除
@@ -43,8 +43,8 @@ kubectl delete -f ./k8s-sv.yaml
 
 #### ＜DBのpvc削除＞
 cd ~/Documents/Kubernetes/k8s-lampp-mac/1.db-disk
-kubectl delete -f 1.PersistentVolume.yaml
 kubectl delete -f 2.PersistentVolumeClaim.yaml
+kubectl delete -f 1.PersistentVolume.yaml
 
 #### secretの削除
 ##### キーの作成は以下のようにして行う
@@ -56,11 +56,11 @@ kubectl delete -f 3.php-apache-psql-secret.yaml
 #### ＜src-deployのpvc削除＞
 cd ~/Documents/Kubernetes/k8s-lampp-mac/2.src-deploy-disk
 
-#### PersistentVolumeの削除
-kubectl delete -f 1.PersistentVolume.yaml
-
 #### PersistentVolumeClaimの削除
 kubectl delete -f 2.PersistentVolumeClaim.yaml
+
+#### PersistentVolumeの削除
+kubectl delete -f 1.PersistentVolume.yaml
 
 #### sshの鍵削除
 kubectl delete secret ssh-keys  
@@ -73,7 +73,7 @@ cd ~/Documents/Kubernetes/k8s-lampp-mac/6.ingress
 kubectl delete -f 80.ingress.yaml
 
 #### namespace切り替え
-kubectl config set-context docker-desktop --namespace=k8s-lampp-mac  
+kubectl config set-context minikube --namespace=k8s-lampp-mac  
 
 #### namespace削除
 kubectl delete namespace k8s-lampp-mac

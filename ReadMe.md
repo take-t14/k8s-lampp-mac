@@ -37,10 +37,14 @@ __******************************************************************************
 ・Mac OS Big Sur 11.2.2  
   
 ◆ソフトウェア  
-・Docker for Windows 2.5.0.1(49550) ～ 3.6.0(67351)  
-・Kubernetes v1.19.3 ～ 1.21.3  
-・Homebrew 3.0.2  
-・skaffold 1.1.0  
+・minikube v1.23.0  
+・Kubernetes v1.22.1（※１）  
+・skaffold 1.31.0 （※２）    
+・Homebrew 3.2.11  
+
+（※１）記載のバージョンでないと動作しない。インターネットで左記バージョンを入手するか、以下URLのものを使用する事。  
+（※２）こちらも記載のバージョンでないと動作しない。skaffoldは以下コマンドでバージョン固定しているので、意識しなくてもこのバージョンが入ります。  
+（※３）WSL2  
 
 __**************************************************************************************__  
 __*　kubernetesを動かす基盤となるソフトウェアのインストール（全てUbuntu 18.04 LTSで実施）__  
@@ -49,12 +53,36 @@ __******************************************************************************
 
 #### # k8s-lampp-macのフォルダの中身を「~/Documents/Kubernetes/k8s-lampp-mac」へ配置する。
 
-#### # Docker for Macをインストールし、設定画面でkubernetesを有効にする。
+#### # minikubeインストール＆セットアップ＆起動
 
-以下をチェックON  
-・Enable Kubernetes  
-・Deploy Docker Stack to Kubernetes by default  
-・Show system containers  
+##### # minikubeインストール
+brew install hyperkit
+
+curl -Lo minikube https://github.com/kubernetes/minikube/releases/download/v1.23.0/minikube-darwin-amd64
+chmod u+x minikube
+mv minikube /usr/local/bin/
+
+curl -LO https://github.com/kubernetes/minikube/releases/download/v1.23.0/docker-machine-driver-hyperkit
+chmod u+x docker-machine-driver-hyperkit
+mv docker-machine-driver-hyperkit /usr/local/bin/
+
+##### # minikubeセットアップ
+minikube config set memory 4096
+minikube config set cpus 2
+minikube config set disk-size 50GB
+minikube config set vm-driver hyperkit
+minikube config set kubernetes-version v1.22.1
+minikube config view
+
+##### # nfs準備
+sudo touch /etc/exports
+
+##### # minikube起動
+minikube start --nfs-share /Users --nfs-shares-root /  
+
+##### # Ingressアドオン有効化  
+minikube addons enable ingress  
+※MacのブラウザからコンテナのWebサーバーへアクセスするには、「ingressproxy.bat」の実行が必要 
 
 #### # ターミナルでHomebrewをインストール（未インストールの場合のみ）
 ##### ＜参考＞
@@ -64,12 +92,12 @@ __******************************************************************************
 #### # ターミナルでskaffoldインストール
 ##### ＜参考＞
 ##### # https://qiita.com/yakisuzu/items/caf5557ba059bb88f0fe
-brew install skaffold@1.1.0  
+brew install skaffold@1.31.0  
 
 #### # kuberctlインストール
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -   
-echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list  
-sudo apt-get update && sudo apt-get install -y kubelet kubeadm kubectl kubernetes-cni  
+curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/darwin/amd64/kubectl"
+chmod +x ./kubectl  
+sudo mv ./kubectl /usr/local/bin/kubectl  
 
 #### # ダッシュボードインストール（1回だけ実施すればよい）
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.2.0/aio/deploy/recommended.yaml  
@@ -132,7 +160,7 @@ kubectl get namespace
 kubectl config current-context  
 ##### # 上記コマンドで表示されたコンテキスト名を、以下のコマンドset-contextの次に組み込む。  
 ##### # namespaceには、切り替えたいnamespaceを設定する。  
-kubectl config set-context docker-desktop --namespace=k8s-lampp-mac  
+kubectl config set-context minikube --namespace=k8s-lampp-mac  
 
 #### # コンテキストの向き先確認
 kubectl config get-contexts  
@@ -208,9 +236,6 @@ cd ~/Documents/Kubernetes/k8s-lampp-mac/5.dns
 ./skaffold_run.sh  
 
 #### ＜ingressを構築＞
-#### # Ingress Controllerの作成
-##### # 参考サイト：https://kubernetes.github.io/ingress-nginx/deploy/
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.48.1/deploy/static/provider/cloud/deploy.yaml
 cd ~/Documents/Kubernetes/k8s-lampp-mac/6.ingress  
 
 #### # Ingressの作成
@@ -255,7 +280,7 @@ __******************************************************************************
 #### # namespace切り替え
 kubectl config current-context  
 #### # 上記コマンドで表示されたコンテキスト名を、以下のコマンドに組み込む
-kubectl config set-context docker-desktop --namespace=k8s-lampp-mac   
+kubectl config set-context minikube --namespace=k8s-lampp-mac   
 
 #### # コンテキストの向き先確認
 kubectl config get-contexts  
@@ -268,15 +293,15 @@ kubectl get pod -n k8s-lampp-mac
 
 #### # init-data.shの実行
 ##### # init-data.shはpod起動時に自動で実行される。pod稼働中に必要になった場合に以下を実行する。
-kubectl exec -it [podの名称] /bin/bash  
-kubectl exec -it php8-fpm-7b7c69c8b4-jtg2c /bin/bash -n k8s-lampp-mac  
-kubectl exec -it apache-64999bb6b4-lt4j4 /bin/bash  
-kubectl exec -it nuxt-8699dfcfc4-6kmt9 /bin/bash  
-kubectl exec -it postgresql-0 /bin/bash  
-kubectl exec -it postfix-77d69ff664-5drvf /bin/bash  
-kubectl exec -it dns-6b8bb6b759-rkn25 /bin/bash 
-kubectl exec -it mysql-0 /bin/bash 
-kubectl exec -it php5-fpm-7d56f8dc44-rr5jw /bin/bash  
+kubectl exec -it [podの名称] /bin/bash -n k8s-lampp-mac  
+kubectl exec -it php8-fpm-675dc56b66-wtn4z /bin/bash -n k8s-lampp-mac  
+kubectl exec -it apache-548646784-tc258 /bin/bash -n k8s-lampp-mac  
+kubectl exec -it nuxt-8699dfcfc4-6kmt9 /bin/bash -n k8s-lampp-mac  
+kubectl exec -it postgresql-0 /bin/bash -n k8s-lampp-mac  
+kubectl exec -it postfix-77d69ff664-5drvf /bin/bash -n k8s-lampp-mac  
+kubectl exec -it dns-6b8bb6b759-rkn25 /bin/bash -n k8s-lampp-mac 
+kubectl exec -it mysql-0 /bin/bash -n k8s-lampp-mac  
+kubectl exec -it php5-fpm-7d56f8dc44-rr5jw /bin/bash -n k8s-lampp-mac  
 
 
 #### # ポートフォワード（postgreSQLへの接続時等に使用）
