@@ -4,7 +4,7 @@
 kubectl create namespace k8s-lampp-mac
 
 #### namespace切り替え
-kubectl config set-context docker-desktop --namespace=k8s-lampp-mac  
+kubectl config set-context microk8s --namespace=k8s-lampp-mac  
 
 #### ＜DBのpvc構築＞
 cd ~/Documents/Kubernetes/k8s-lampp-mac/1.db-disk

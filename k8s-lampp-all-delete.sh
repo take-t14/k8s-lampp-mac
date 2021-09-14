@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #### namespace切り替え
-kubectl config set-context docker-desktop --namespace=k8s-lampp-mac  
+kubectl config set-context microk8s --namespace=k8s-lampp-mac  
 
 #### ＜postgreSQL削除＞
 ##### postgreSQLイメージ削除
@@ -73,7 +73,7 @@ cd ~/Documents/Kubernetes/k8s-lampp-mac/6.ingress
 kubectl delete -f 80.ingress.yaml
 
 #### namespace切り替え
-kubectl config set-context docker-desktop --namespace=k8s-lampp-mac  
+kubectl config set-context microk8s --namespace=k8s-lampp-mac  
 
 #### namespace削除
 kubectl delete namespace k8s-lampp-mac

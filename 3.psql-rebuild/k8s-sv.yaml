@@ -37,7 +37,6 @@ spec:
       containers:
       - name: postgresql
         image: php-gke-postgres:latest
-        imagePullPolicy: Never
         ports:
         - containerPort: 5432
           name: postgresql

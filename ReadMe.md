@@ -52,6 +52,59 @@ __******************************************************************************
 
 #### # k8s-lampp-macのフォルダの中身を「~/Documents/Kubernetes/k8s-lampp-mac」へ配置する。
 
+mac$ multipass launch --mem 4G --disk 50G --cpus 2 --name primary
+mac$ multipass shell primary
+
+multipass@primary:~$ sudo snap install microk8s --classic
+multipass@primary:~$ sudo iptables -P FORWARD ACCEPT
+multipass@primary:~$ sudo usermod -a -G microk8s $USER
+multipass@primary:~$ sudo chown -f -R $USER ~/.kube
+※Ctrl+Dで一度シェルを終了後、multipass shell primaryで再度接続
+multipass@primary:~$ microk8s.enable registry
+multipass@primary:~$ microk8s.enable dns dashboard
+multipass@primary:~$ ls /var/snap/microk8s/current/args/
+multipass@primary:~$ cat /var/snap/microk8s/current/args/containerd
+multipass@primary:~$ sudo apt-get update
+multipass@primary:~$ sudo apt-get install docker.io
+multipass@primary:~$ systemctl status docker
+multipass@primary:~$ sudo mkdir /etc/systemd/system/docker.service.d/
+multipass@primary:~$ sudo sh -c 'cat > /etc/systemd/system/docker.service.d/startup_options.conf'
+# /etc/systemd/system/docker.service.d/override.conf
+[Service]
+ExecStart=
+ExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:2376
+^C
+※Ctrl+Dで一度シェルを終了、「multipass ls」でmultipassのIPを確認
+mac$ multipass ls
+mac$ multipass shell
+multipass@primary:~$ sudo sh -c 'cat > /etc/docker/daemon.json'
+{
+  "insecure-registries" : ["192.168.64.24:32000"]
+}
+^C
+multipass@primary:~$ sudo systemctl daemon-reload
+multipass@primary:~$ sudo systemctl restart docker.service
+multipass@primary:~$ sudo snap install kubectl --classic
+multipass@primary:~$ microk8s.config > /home/$USER/.kube/config
+multipass@primary:~$ vim /var/snap/microk8s/current/args/containerd-template.toml
+※「[plugins."io.containerd.grpc.v1.cri".registry.mirrors]」の下に以下を追記
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors."192.168.64.24:32000"]
+        endpoint = ["http://192.168.64.24:32000"]
+multipass@primary:~$ microk8s stop
+multipass@primary:~$ microk8s start
+※Ctrl+Dでシェルを終了
+
+mac$ multipass ls
+mac$ export DOCKER_HOST=tcp://192.168.64.24:2376
+mac$ multipass exec primary -- /snap/bin/microk8s.config > ~/.kube/microk8s.kubeconfig
+mac$ export KUBECONFIG=~/.kube/microk8s.kubeconfig
+mac$ multipass mount /Users primary:/Users
+mac$ skaffold config set insecure-registries 192.168.64.24:32000
+mac$ skaffold config set default-repo 192.168.64.24:32000
+
+mac$ multipass shell primary
+multipass@primary:~$ microk8s dashboard-proxy
+
 #### # Docker for Macをインストールし、設定画面でkubernetesを有効にする。
 
 以下をチェックON  
@@ -135,7 +188,7 @@ kubectl get namespace
 kubectl config current-context  
 ##### # 上記コマンドで表示されたコンテキスト名を、以下のコマンドset-contextの次に組み込む。  
 ##### # namespaceには、切り替えたいnamespaceを設定する。  
-kubectl config set-context docker-desktop --namespace=k8s-lampp-mac  
+kubectl config set-context microk8s --namespace=k8s-lampp-mac  
 
 #### # コンテキストの向き先確認
 kubectl config get-contexts  
@@ -258,7 +311,7 @@ __******************************************************************************
 #### # namespace切り替え
 kubectl config current-context  
 #### # 上記コマンドで表示されたコンテキスト名を、以下のコマンドに組み込む
-kubectl config set-context docker-desktop --namespace=k8s-lampp-mac   
+kubectl config set-context microk8s --namespace=k8s-lampp-mac   
 
 #### # コンテキストの向き先確認
 kubectl config get-contexts  
@@ -275,13 +328,13 @@ kubectl exec -it [podの名称] /bin/bash
 kubectl exec -it `kubectl get pod -n k8s-lampp-mac | grep php7-fpm | grep Running | awk -F " " '{print $1}'` /bin/bash -n k8s-lampp-mac  
 kubectl exec -it `kubectl get pod -n k8s-lampp-mac | grep php8-fpm | grep Running | awk -F " " '{print $1}'` /bin/bash -n k8s-lampp-mac  
 kubectl exec -it `kubectl get pod -n k8s-lampp-mac | grep apache | awk -F " " '{print $1}'` /bin/bash -n k8s-lampp-mac  
-kubectl exec -it apache-64999bb6b4-lt4j4 /bin/bash  
-kubectl exec -it nuxt-8699dfcfc4-6kmt9 /bin/bash  
-kubectl exec -it postgresql-0 /bin/bash  
-kubectl exec -it postfix-77d69ff664-5drvf /bin/bash  
-kubectl exec -it dns-6b8bb6b759-rkn25 /bin/bash 
-kubectl exec -it mysql-0 /bin/bash 
-kubectl exec -it php5-fpm-7d56f8dc44-rr5jw /bin/bash  
+kubectl exec -it apache-64999bb6b4-lt4j4 /bin/bash -n k8s-lampp-mac  
+kubectl exec -it nuxt-8699dfcfc4-6kmt9 /bin/bash -n k8s-lampp-mac  
+kubectl exec -it postgresql-0 /bin/bash -n k8s-lampp-mac  
+kubectl exec -it postfix-77d69ff664-5drvf /bin/bash -n k8s-lampp-mac  
+kubectl exec -it dns-6b8bb6b759-rkn25 /bin/bas -n k8s-lampp-mac  
+kubectl exec -it mysql-0 /bin/bas -n k8s-lampp-mac  
+kubectl exec -it php5-fpm-7d56f8dc44-rr5jw /bin/bash -n k8s-lampp-mac  
 
 
 #### # ポートフォワード（postgreSQLへの接続時等に使用）

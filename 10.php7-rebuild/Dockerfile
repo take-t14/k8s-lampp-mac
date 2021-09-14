@@ -85,6 +85,7 @@ RUN chown root:www-data /opt/remi/php72/root/usr/sbin/php-fpm && \
   #chown root:www-data /var/opt/remi/php72/run/php-fpm && \
   #chmod 775 /var/opt/remi/php72/run/php-fpm
 
+
 # Blackfile
 RUN yum -y install pygpgme
 RUN yum -y install wget

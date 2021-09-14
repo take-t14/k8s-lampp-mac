@@ -37,7 +37,6 @@ spec:
       containers:
       - name: mysql
         image: php-gke-mysql:latest
-        imagePullPolicy: Never
         ports:
         - containerPort: 3306
           name: mysql

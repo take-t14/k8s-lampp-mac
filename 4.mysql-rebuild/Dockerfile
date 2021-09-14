@@ -34,6 +34,7 @@ COPY ./docker-entrypoint.sh /usr/local/bin/
 RUN chmod 777 /usr/local/bin/docker-entrypoint.sh
 RUN chown root:root /usr/local/bin/docker-entrypoint.sh
 
+
 # 言語を日本語に設定
 RUN localedef -i ja_JP -f UTF-8 ja_JP.UTF-8
 RUN echo 'LANG="ja_JP.UTF-8"' >  /etc/locale.conf

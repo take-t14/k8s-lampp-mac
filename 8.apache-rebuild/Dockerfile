@@ -47,7 +47,6 @@ RUN mkdir -p /var/www/html
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/opt/rh/httpd24/root/usr/lib64
 ENV PATH $PATH:/opt/rh/httpd24/root/usr/sbin
 
-
 # 言語を日本語に設定
 RUN localedef -i ja_JP -f UTF-8 ja_JP.UTF-8
 RUN echo 'LANG="ja_JP.UTF-8"' >  /etc/locale.conf

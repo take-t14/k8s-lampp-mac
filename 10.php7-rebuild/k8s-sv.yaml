@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
       - name: php7-fpm
-        image: php-gke-php:latest
+        image: php7-gke-php:latest
 #        env:
 #        - name: LC_CTYPE
 #          value: ja_JP.utf8

@@ -62,7 +62,6 @@ RUN ln -fs /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 RUN mkdir ~/.subversion
 RUN echo -e "[global]\nstore-passwords = yes\nstore-auth-creds = yes" > ~/.subversion/config
 
-
 RUN mv /etc/opt/remi/php80/php.d /etc/opt/remi/php80/php.d_back
 RUN mkdir /etc/opt/remi/php80/php.d
 RUN cp -a /etc/opt/remi/php80/php.d_back/*opcache*.ini /etc/opt/remi/php80/php.d/
