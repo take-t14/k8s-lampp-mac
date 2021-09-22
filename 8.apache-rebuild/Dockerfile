@@ -25,6 +25,8 @@ COPY ./Includes /opt/rh/httpd24/root/etc/httpd/Includes
 ADD ./entrypoint*.sh /usr/local/bin/
 RUN chmod 700 /usr/local/bin/entrypoint*.sh
 RUN chown root:root /usr/local/bin/entrypoint*.sh
+RUN useradd www-data
+RUN echo 'www-data:www-data' |chpasswd
 
 RUN sed -i "s/    DirectoryIndex index.html/    DirectoryIndex index.php/" /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf
 RUN sed -i "s/#ServerName www.example.com:80/ServerName localhost:80/" /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf

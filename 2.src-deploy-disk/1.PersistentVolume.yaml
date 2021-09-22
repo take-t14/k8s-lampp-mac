@@ -10,4 +10,4 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: hostpath
   hostPath:
-    path: /Users/Shared/k8s/2.src-deploy-disk/storage
+    path: /var/nfs/k8s/2.src-deploy-disk/storage

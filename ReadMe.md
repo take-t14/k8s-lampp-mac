@@ -37,12 +37,13 @@ __******************************************************************************
 ・Mac OS Big Sur 11.2.2  
   
 ◆ソフトウェア  
-・Docker for Windows 2.5.0.1(49550) ～ 3.6.0(67351)  
-・Kubernetes v1.19.3 ～ 1.21.3（※１）  
-・Homebrew 3.0.2  
+・multipass  1.7.0+mac
+・multipassd 1.7.0+mac
+・Kubernetes v1.21.4（※１）  
 ・skaffold 1.1.0（※２）  
+・Homebrew 3.2.11  
 
-（※１）記載のバージョンでないと動作しない。インターネットで左記バージョンを入手するか、以下URLのものを使用する事。  
+（※１）記載のバージョンでないと動作しない。microk8sのinstall時に「--channel=1.21/stable」を指定する事。  
 （※２）こちらも記載のバージョンでないと動作しない。skaffoldは以下コマンドでバージョン固定しているので、意識しなくてもこのバージョンが入ります。  
 
 __**************************************************************************************__  
@@ -52,103 +53,116 @@ __******************************************************************************
 
 #### # k8s-lampp-macのフォルダの中身を「~/Documents/Kubernetes/k8s-lampp-mac」へ配置する。
 
-mac$ multipass launch --mem 4G --disk 50G --cpus 2 --name primary
-mac$ multipass shell primary
+#### # ターミナルでHomebrewをインストール（未インストールの場合のみ）
+##### ＜参考＞
+##### # https://brew.sh/index_ja
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"  
+  
+#### # ターミナルでskaffoldインストール
+##### ＜参考＞
+##### # https://qiita.com/yakisuzu/items/caf5557ba059bb88f0fe
+brew install skaffold@1.1.0  
+  
+##### # multipassのインストール＆インスタンス作成
+mac$ brew install multipass --cask  
+mac$ multipass launch --mem 4G --disk 50G --cpus 2 --name primary  
+※以下2つのコマンドでprimaryのIPアドレスを確認。以降primaryのIPアドレスを192.168.64.24と仮定して設定する  
+mac$ multipass info primary  
+mac$ multipass ls  
+  
+##### # NFSインストール＆セットアップ
+###### # https://www.digitalocean.com/community/tutorials/how-to-set-up-an-nfs-mount-on-ubuntu-20-04-ja
+※primaryへ接続  
+mac$ multipass shell primary  
+multipass@primary:~$ sudo apt update  
+multipass@primary:~$ sudo apt install -y nfs-kernel-server  
+multipass@primary:~$ sudo mkdir -p /var/nfs/k8s  
+multipass@primary:~$ ls -la /var/nfs/k8s  
+multipass@primary:~$ sudo chown -R nobody:nogroup /var/nfs/k8s  
+multipass@primary:~$ sudo chmod -R a+w /var/nfs/k8s  
+multipass@primary:~$ sudo nano /etc/exports  
+```
+/var/nfs/k8s    *(rw,sync,all_squash,anonuid=1000,anongid=1000)
+```
+multipass@primary:~$ sudo systemctl restart nfs-kernel-server  
+multipass@primary:~$ sudo systemctl enable nfs-kernel-server  
+multipass@primary:~$ sudo systemctl restart rpc-statd.service  
+multipass@primary:~$ sudo systemctl enable rpc-statd.service  
+※Ctrl+Dでシェルを終了  
 
-multipass@primary:~$ sudo snap install microk8s --classic
-multipass@primary:~$ sudo iptables -P FORWARD ACCEPT
-multipass@primary:~$ sudo usermod -a -G microk8s $USER
-multipass@primary:~$ sudo chown -f -R $USER ~/.kube
-※Ctrl+Dで一度シェルを終了後、multipass shell primaryで再度接続
-multipass@primary:~$ microk8s.enable registry
-multipass@primary:~$ microk8s.enable dns dashboard
-multipass@primary:~$ ls /var/snap/microk8s/current/args/
-multipass@primary:~$ cat /var/snap/microk8s/current/args/containerd
-multipass@primary:~$ sudo apt-get update
-multipass@primary:~$ sudo apt-get install docker.io
-multipass@primary:~$ systemctl status docker
-multipass@primary:~$ sudo mkdir /etc/systemd/system/docker.service.d/
+##### # microk8sインストール＆セットアップ
+※インストール可能なmicrok8sのバージョンを確認  
+mac$ multipass shell primary  
+multipass@primary:~$ snap info microk8s  
+multipass@primary:~$ sudo snap install microk8s --classic --channel=1.21/stable  
+multipass@primary:~$ sudo iptables -P FORWARD ACCEPT  
+multipass@primary:~$ sudo usermod -a -G microk8s $USER  
+multipass@primary:~$ sudo chown -f -R $USER ~/.kube  
+※Ctrl+Dで一度シェルを終了後、multipass shell primaryで再度接続  
+multipass@primary:~$ microk8s.enable registry dns dashboard ingress  
+multipass@primary:~$ ls /var/snap/microk8s/current/args/  
+multipass@primary:~$ cat /var/snap/microk8s/current/args/containerd  
+multipass@primary:~$ sudo apt-get update  
+multipass@primary:~$ sudo apt-get install -y docker.io  
+multipass@primary:~$ systemctl status docker  
+multipass@primary:~$ sudo mkdir /etc/systemd/system/docker.service.d/  
+```
+※1行目の「sudo sh -c 'cat > 〜」を実行した後、2〜５行目をペーストし、Ctrl+Cボタンを押下する
 multipass@primary:~$ sudo sh -c 'cat > /etc/systemd/system/docker.service.d/startup_options.conf'
 # /etc/systemd/system/docker.service.d/override.conf
 [Service]
 ExecStart=
 ExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:2376
-^C
-※Ctrl+Dで一度シェルを終了、「multipass ls」でmultipassのIPを確認
-mac$ multipass ls
-mac$ multipass shell
-multipass@primary:~$ sudo sh -c 'cat > /etc/docker/daemon.json'
-{
-  "insecure-registries" : ["192.168.64.24:32000"]
-}
-^C
-multipass@primary:~$ sudo systemctl daemon-reload
-multipass@primary:~$ sudo systemctl restart docker.service
-multipass@primary:~$ sudo snap install kubectl --classic
-multipass@primary:~$ microk8s.config > /home/$USER/.kube/config
-multipass@primary:~$ vim /var/snap/microk8s/current/args/containerd-template.toml
+※Ctrl+Cでヒアドキュメント終了
+```
+※設定内容確認  
+multipass@primary:~$ cat /etc/systemd/system/docker.service.d/startup_options.conf  
+multipass@primary:~$ sudo systemctl daemon-reload  
+multipass@primary:~$ sudo systemctl restart docker.service  
+multipass@primary:~$ sudo snap install kubectl --classic  
+multipass@primary:~$ microk8s.config > /home/$USER/.kube/config  
+
+###### # multipass内のdaemon.jsonにinsecure-registries登録
+multipass@primary:~$ sudo su - -c "echo '{' > /etc/docker/daemon.json"
+multipass@primary:~$ sudo su - -c "echo '  \"insecure-registries\" : [\"multipass-host:32000\"]' >> /etc/docker/daemon.json"
+multipass@primary:~$ sudo su - -c "echo '}' >> /etc/docker/daemon.json"
+
+###### # multipass内のregistry登録
+multipass@primary:~$ vim /var/snap/microk8s/current/args/containerd-template.toml  
+```
 ※「[plugins."io.containerd.grpc.v1.cri".registry.mirrors]」の下に以下を追記
-      [plugins."io.containerd.grpc.v1.cri".registry.mirrors."192.168.64.24:32000"]
-        endpoint = ["http://192.168.64.24:32000"]
-multipass@primary:~$ microk8s stop
-multipass@primary:~$ microk8s start
-※Ctrl+Dでシェルを終了
-
-mac$ multipass ls
-mac$ export DOCKER_HOST=tcp://192.168.64.24:2376
-mac$ multipass exec primary -- /snap/bin/microk8s.config > ~/.kube/microk8s.kubeconfig
-mac$ export KUBECONFIG=~/.kube/microk8s.kubeconfig
-mac$ multipass mount /Users primary:/Users
-mac$ skaffold config set insecure-registries 192.168.64.24:32000
-mac$ skaffold config set default-repo 192.168.64.24:32000
-
-mac$ multipass shell primary
-multipass@primary:~$ microk8s dashboard-proxy
-
-#### # Docker for Macをインストールし、設定画面でkubernetesを有効にする。
-
-以下をチェックON  
-・Enable Kubernetes  
-・Deploy Docker Stack to Kubernetes by default  
-・Show system containers  
-
-#### # ターミナルでHomebrewをインストール（未インストールの場合のみ）
-##### ＜参考＞
-##### # https://brew.sh/index_ja
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"  
-
-#### # ターミナルでskaffoldインストール
-##### ＜参考＞
-##### # https://qiita.com/yakisuzu/items/caf5557ba059bb88f0fe
-brew install skaffold@1.1.0  
-
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors."multipass-host:32000"]
+        endpoint = ["http://multipass-host:32000"]
+```
+multipass@primary:~$ microk8s stop; microk8s start
+※Ctrl+Dでシェルを終了  
+mac$ multipass exec primary -- /snap/bin/microk8s.config > ~/.kube/microk8s.kubeconfig  
+  
+##### # Docker、kubectl、skaffoldの向き先設定
+vi ~/.zprofile  
+※以下を追記  
+```
+source ~/Documents/Kubernetes/k8s-lampp-mac/multipass-envinit.sh
+```
+source ~/.zprofile  
+  
+##### # multipass再起動
+mac$ cd ~/Documents/Kubernetes/k8s-lampp-mac/  
+mac$ ./multipass-restart.sh  
+  
+##### # microk8sのdashboardのproxy起動
+mac$ cd ~/Documents/Kubernetes/k8s-lampp-mac/  
+mac$ ./kubeproxy.sh  
+※FireFoxで以下へアクセス（危険を承知して表示するボタンを押下）  
+https://multipass-host:10443/#/login  
+  
+  
 #### # kuberctlインストール
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -   
 echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list  
 sudo apt-get update && sudo apt-get install -y kubelet kubeadm kubectl kubernetes-cni  
-
-#### # ダッシュボードインストール（1回だけ実施すればよい）
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.2.0/aio/deploy/recommended.yaml  
-
-#### # kubectl proxyを実行（ダッシュボード閲覧に必要）
-kubectl proxy  
-
-#### # ダッシュボードへアクセス
-http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/  
-
-#### # 権限取得
-kubectl -n kube-system get secret  
-
-#### # 認証トークン取得（取得したTokenをサインイン画面のトークンで設定してサインインする方式）
-kubectl -n kube-system describe secret default  
-
-#### # 認証トークン設定（取得したTokenからkubeconfigを出力し、そのファイルを指定してサインインする方式。）
-##### # 以下のコマンドの[TOKEN]へ取得した認証トークンを設定する。
-##### # kubectl config set-credentials docker-desktop --token="[TOKEN]"
-
-#### # ダッシュボードのサインインの画面で、~\.kube\configを指定するとサインイン出来る。
-
-
+  
+  
 __**************************************************************************************__  
 __*　kubernetesでLAPP環境構築する手順__  
 __*　※ 1回だけ実施すれば良い。__  
@@ -327,12 +341,12 @@ kubectl get pod -n k8s-lampp-mac
 kubectl exec -it [podの名称] /bin/bash    
 kubectl exec -it `kubectl get pod -n k8s-lampp-mac | grep php7-fpm | grep Running | awk -F " " '{print $1}'` /bin/bash -n k8s-lampp-mac  
 kubectl exec -it `kubectl get pod -n k8s-lampp-mac | grep php8-fpm | grep Running | awk -F " " '{print $1}'` /bin/bash -n k8s-lampp-mac  
-kubectl exec -it `kubectl get pod -n k8s-lampp-mac | grep apache | awk -F " " '{print $1}'` /bin/bash -n k8s-lampp-mac  
+kubectl exec -it `kubectl get pod -n k8s-lampp-mac | grep apache | grep Running | awk -F " " '{print $1}'` /bin/bash -n k8s-lampp-mac  
 kubectl exec -it apache-64999bb6b4-lt4j4 /bin/bash -n k8s-lampp-mac  
 kubectl exec -it nuxt-8699dfcfc4-6kmt9 /bin/bash -n k8s-lampp-mac  
 kubectl exec -it postgresql-0 /bin/bash -n k8s-lampp-mac  
 kubectl exec -it postfix-77d69ff664-5drvf /bin/bash -n k8s-lampp-mac  
-kubectl exec -it dns-6b8bb6b759-rkn25 /bin/bas -n k8s-lampp-mac  
+kubectl exec -it `kubectl get pod -n k8s-lampp-mac | grep dns | grep Running | awk -F " " '{print $1}'` /bin/bash -n k8s-lampp-mac  
 kubectl exec -it mysql-0 /bin/bas -n k8s-lampp-mac  
 kubectl exec -it php5-fpm-7d56f8dc44-rr5jw /bin/bash -n k8s-lampp-mac  
 

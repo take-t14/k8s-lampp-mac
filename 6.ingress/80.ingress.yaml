@@ -3,7 +3,8 @@ kind: Ingress
 metadata:
   name: ingress
   annotations:
-    kubernetes.io/ingress.class: "nginx"
+    kubernetes.io/ingress.class: "public"
+    nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 # HTTPSを強制する際は以下の設定を有効とする(上記ssl-redirect: "false"と、force-ssl-redirect: "false"のコメント化も必要)
